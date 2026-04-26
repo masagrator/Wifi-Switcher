@@ -1,2 +1,2 @@
-# Wifi-Switcher
-Nintendo Switch overlay for switching between saved WiFi networks
+# BT_Audio-ovl
+Nintendo Switch overlay for connecting to already paired devices
