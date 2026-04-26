@@ -213,7 +213,7 @@ public:
 			}
 		}
 		nifmIsWirelessCommunicationEnabled(&wifiEnabled);
-		if (wifiEnabled == true) {
+		if (wifiEnabled == true && requestOpen == true) {
 			NifmInternetConnectionType type;
 			u32 dummy;
 			NifmInternetConnectionStatus status;
@@ -229,7 +229,7 @@ public:
 					else sprintf(toPrint, "Connected to:\n%s\nChoose device.", profile.network_name[0] ? profile.network_name : std::string(profile.wireless_setting_data.ssid, profile.wireless_setting_data.ssid_len).c_str());
 				}
 			}
-			else sprintf(toPrint, "Not connected.\nChoose device.");
+			else if (connectionRc == 0) sprintf(toPrint, "Not connected.\nChoose device.");
 		}
 	}
 
