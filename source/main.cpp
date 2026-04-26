@@ -109,7 +109,7 @@ bool requestOpen = true;
 
 class GuiTest : public tsl::Gui {
 public:
-	GuiTest(u8 arg1, u8 arg2, bool arg3) {
+	GuiTest() {
 		setsysGetWirelessLanEnableFlag(&wifiEnabled);
 		if (wifiEnabled == true) {
 			NifmInternetConnectionType type;
@@ -118,29 +118,10 @@ public:
 			Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
 			if (R_SUCCEEDED(rc) && type == NifmInternetConnectionType_Ethernet) {
 				wifiEnabled = false;
-				sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
 				return;
 			}
+			sprintf(toPrint, "Choose device.");
 		}
-		if (wifiEnabled == false) {
-			sprintf(toPrint, "Wi-Fi is disabled!\nOverlay disabled!");
-			return;
-		}
-		else {
-			NifmNetworkProfileData profile;
-			Result rc = nifmGetCurrentNetworkProfile(&profile);
-			if (R_FAILED(rc)) sprintf(toPrint, "Choose device.");
-			else sprintf(toPrint, "Connected to:\n%s\nChoose device.", profile.network_name[0] ? profile.network_name : std::string(profile.wireless_setting_data.ssid, profile.wireless_setting_data.ssid_len).c_str());
-		}
-		s32 total_out = 0;
-		Result rc = nifmEnumerateNetworkProfiles(NifmNetworkProfileType_User, nullptr, 0, &total_out);
-		if (R_FAILED(rc) || total_out == 0) return;
-		NifmNetworkProfileBasicInfo* basicInfo = new NifmNetworkProfileBasicInfo[total_out];
-		nifmEnumerateNetworkProfiles(NifmNetworkProfileType_User, basicInfo, total_out, &total_out);
-		for (s32 i = total_out-1; i >= 0; i--) {
-			if (basicInfo[i].connection_type == NifmInternetConnectionType_WiFi) wifi_devices.emplace_back(basicInfo[i].uuid, (basicInfo[i].network_name[0] ? basicInfo[i].network_name : std::string(basicInfo[i].ssid, basicInfo[i].ssid_len)));
-		}
-		delete[] basicInfo;
 	}
 
 	// Called when this Gui gets loaded to create the UI
@@ -149,10 +130,7 @@ public:
 		// A OverlayFrame is the base element every overlay consists of. This will draw the default Title and Subtitle.
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
 		auto frame = new tsl::elm::OverlayFrame(APP_TITLE, APP_VERSION);
-		if (wifiEnabled) {
-			frame -> changeButtons("\uE0E1 Back  \uE0E0 Connect");
-		}
-		else frame -> changeButtons("\uE0E1  Back");
+		frame -> changeButtons("\uE0E1 Back  \uE0E0 Connect  \uE0B6 Turn off WiFi");
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
@@ -233,39 +211,51 @@ public:
 				}
 			}
 		}
+		setsysGetWirelessLanEnableFlag(&wifiEnabled);
 		if (wifiEnabled == true) {
-			setsysGetWirelessLanEnableFlag(&wifiEnabled);
 			NifmInternetConnectionType type;
 			u32 dummy;
 			NifmInternetConnectionStatus status;
 			Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
-			if (R_SUCCEEDED(rc) && type == NifmInternetConnectionType_Ethernet) {
-				wifiEnabled = false;
+			if (R_SUCCEEDED(rc)) {
+				if (type == NifmInternetConnectionType_Ethernet) {
+					wifiEnabled = false;
+				}
+				if (last_index == -1) {
+					NifmNetworkProfileData profile;
+					Result rc = nifmGetCurrentNetworkProfile(&profile);
+					if (R_FAILED(rc)) sprintf(toPrint, "Not connected.\nChoose device.");
+					else sprintf(toPrint, "Connected to:\n%s\nChoose device.", profile.network_name[0] ? profile.network_name : std::string(profile.wireless_setting_data.ssid, profile.wireless_setting_data.ssid_len).c_str());
+				}
 			}
-		}
-		if (wifiEnabled == false) {
-			NifmInternetConnectionType type;
-			u32 dummy;
-			NifmInternetConnectionStatus status;
-			Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
-			if (R_SUCCEEDED(rc) && type == NifmInternetConnectionType_Ethernet) {
-				sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
-				return;
-			}
-			sprintf(toPrint, "Wi-Fi is disabled!\nOverlay disabled!");
+			else sprintf(toPrint, "Not connected.\nChoose device.");
 		}
 	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
+		if (wifiEnabled == false) {
+			tsl::goBack();
+			return true;
+		}
+		if (keysDown & HidNpadButton_B) {
+			tsl::goBack();
+			tsl::goBack();
+			return true;
+		}
+		if (keysDown & HidNpadButton_Minus) {
+			nifmSetWirelessCommunicationEnabled(false);
+			tsl::goBack();
+			return true;
+		}
 		return false;   // Return true here to singal the inputs have been consumed
 	}
 };
 
 class GuiTest2 : public tsl::Gui {
 public:
-	GuiTest2(u8 arg1, u8 arg2, bool arg3) {
-		sprintf(toPrint, "Wi-Fi is disabled!\nEnable Wi-Fi in system settings.");
+	GuiTest2() {
+		sprintf(toPrint, "Wi-Fi is disabled!");
 	}
 
 	// Called when this Gui gets loaded to create the UI
@@ -275,7 +265,7 @@ public:
 		// If you need more information in the header or want to change it's look, use a HeaderOverlayFrame.
 		auto frame = new tsl::elm::OverlayFrame(APP_TITLE, APP_VERSION);
 
-		frame -> changeButtons("\uE0E1  Back");
+		frame -> changeButtons("\uE0E1  Back  \uE0E0  Select");
 
 		// A list that can contain sub elements and handles scrolling
 		auto list = new tsl::elm::List();
@@ -284,6 +274,16 @@ public:
 			renderer->drawString(toPrint, false, x, y+30, 20, renderer->a(0xFFFF));
 		}), 100);
 
+		auto *clickableListItem = new tsl::elm::ListItem("Enable Wi-Fi");
+		clickableListItem->setClickListener([](u64 keys) { 
+			if (wifiEnabled == false && (keys & HidNpadButton_A)) {
+				nifmSetWirelessCommunicationEnabled(true);
+				return true;
+			}
+			return false;
+		});
+		list->addItem(clickableListItem);
+
 		frame->setContent(list);
 		
 		// Return the frame to have it become the top level element of this Gui
@@ -291,11 +291,64 @@ public:
 	}
 
 	// Called once every frame to update values
-	virtual void update() override {}
+	virtual void update() override {
+		setsysGetWirelessLanEnableFlag(&wifiEnabled);
+		if (wifiEnabled == true) {
+			NifmInternetConnectionType type;
+			u32 dummy;
+			NifmInternetConnectionStatus status;
+			Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
+			if (R_SUCCEEDED(rc) && type == NifmInternetConnectionType_Ethernet) {
+				wifiEnabled = false;
+				sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
+				return;
+			}
+		}
+	}
 
 	// Called once every frame to handle inputs not handled by other UI elements
 	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
+		if (wifiEnabled == true) {
+			tsl::goBack();
+			return true;
+		}
+		if (keysDown & HidNpadButton_B) {
+			tsl::goBack();
+			tsl::goBack();
+			return true;
+		}
 		return false;   // Return true here to singal the inputs have been consumed
+	}
+};
+
+class Dummy : public tsl::Gui {
+public:
+	Dummy() {
+		s32 total_out = 0;
+		Result rc = nifmEnumerateNetworkProfiles(NifmNetworkProfileType_User, nullptr, 0, &total_out);
+		if (R_FAILED(rc) || total_out == 0) return;
+		NifmNetworkProfileBasicInfo* basicInfo = new NifmNetworkProfileBasicInfo[total_out];
+		nifmEnumerateNetworkProfiles(NifmNetworkProfileType_User, basicInfo, total_out, &total_out);
+		for (s32 i = total_out-1; i >= 0; i--) {
+			if (basicInfo[i].connection_type == NifmInternetConnectionType_WiFi) wifi_devices.emplace_back(basicInfo[i].uuid, (basicInfo[i].network_name[0] ? basicInfo[i].network_name : std::string(basicInfo[i].ssid, basicInfo[i].ssid_len)));
+		}
+		delete[] basicInfo;
+	}
+
+	// Called when this Gui gets loaded to create the UI
+	// Allocate all elements on the heap. libtesla will make sure to clean them up when not needed anymore
+	virtual tsl::elm::Element* createUI() override {
+		auto frame = new tsl::elm::OverlayFrame(APP_TITLE, APP_VERSION);
+		return frame;
+	}
+
+	// Called once every frame to handle inputs not handled by other UI elements
+	virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) override {
+		if (wifiEnabled == false) {
+			tsl::changeTo<GuiTest2>();
+		}
+		else tsl::changeTo<GuiTest>();
+		return true;   // Return true here to singal the inputs have been consumed
 	}
 };
 
@@ -307,7 +360,7 @@ public:
 		tsl::hlp::doWithSmSession([]{
 			
 			setsysInitialize();
-			nifmInitialize(NifmServiceType_User);
+			nifmInitialize(NifmServiceType_System);
 			nifmCreateRequest(&_request, true);
 			setsysGetWirelessLanEnableFlag(&wifiEnabled);
 		});
@@ -327,10 +380,7 @@ public:
 	virtual void onHide() override {}    // Called before overlay wants to change from visible to invisible state
 
 	virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
-		if (wifiEnabled == false) {
-			return initially<GuiTest2>(1, 2, true);  // Initial Gui to load. It's possible to pass arguments to it's constructor like this
-		}
-		return initially<GuiTest>(1, 2, true);  // Initial Gui to load. It's possible to pass arguments to it's constructor like this
+		return initially<Dummy>();
 	}
 };
 
