@@ -159,12 +159,12 @@ public:
 		
 		list->addItem(new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
 			renderer->drawString(toPrint, false, x, y+30, 20, renderer->a(0xFFFF));
-		}), 100);
+		}), 120);
 
 		if (wifiEnabled) {
 			for (size_t i = 0; i < wifi_devices.size(); i++) {
 				auto *clickableListItem = new tsl::elm::ListItem(wifi_devices[i].name);
-				clickableListItem->setClickListener([i](u64 keys) { 
+				clickableListItem->setClickListener([i, this](u64 keys) { 
 					if (wifiEnabled && requestOpen && (keys & HidNpadButton_A)) {
 						if (connectionRc == UINT32_MAX) {
 							nifmRequestCancel(&_request);
@@ -177,6 +177,9 @@ public:
 						else connectionRc = UINT32_MAX;
 						last_index = i;
 						requestOpen = false;
+						for (size_t x = 0; x < i; x++) {
+							this->requestFocus(this->getFocusedElement()->getParent(), tsl::FocusDirection::Up, false);
+						}
 						return true;
 					}
 					return false;
@@ -214,12 +217,16 @@ public:
 				requestOpen = true;
 				#define RESULT_WIFI_OFF 0x8ae6e
 				#define RESULT_WIFI_NOT_FOUND 0x8986e
+				#define RESULT_WIFI_NOT_FOUND_DISCONNECTED 0xfa66e
 				if (connectionRc == RESULT_WIFI_OFF) {
 					sprintf(toPrint, "Error! Wi-Fi turned off!\nOverlay disabled!");
 					wifiEnabled = false;
 				}
 				else if (connectionRc == RESULT_WIFI_NOT_FOUND) {
-					snprintf(toPrint, sizeof(toPrint), "Couldn't connect to:\n%s", wifi_devices[last_index].name.c_str());
+					snprintf(toPrint, sizeof(toPrint), "Couldn't connect to:\n%s\n\nLast connection was maintained.", wifi_devices[last_index].name.c_str());
+				}
+				else if (connectionRc == RESULT_WIFI_NOT_FOUND_DISCONNECTED) {
+					snprintf(toPrint, sizeof(toPrint), "Couldn't connect to:\n%s\n\nLast connection was not maintained!", wifi_devices[last_index].name.c_str());
 				}
 				else {
 					snprintf(toPrint, sizeof(toPrint), "Error while connecting to:\n%s\nError code: 0x%x", wifi_devices[last_index].name.c_str(), connectionRc);
