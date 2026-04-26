@@ -1,2 +1,3 @@
-# BT_Audio-ovl
-Nintendo Switch overlay for connecting to already paired devices
+# WiFi Switcher
+
+Nintendo Switch overlay for connecting to already saved hotspots
