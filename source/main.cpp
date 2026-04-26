@@ -304,7 +304,6 @@ public:
 					wifiEnabled = false;
 					isEthernet = true;
 					sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
-					return;
 				}
 			}
 		}
@@ -314,7 +313,6 @@ public:
 				if (type == NifmInternetConnectionType_Ethernet) {
 					isEthernet = true;
 					sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
-					return;
 				}
 			}
 			else {
