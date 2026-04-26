@@ -197,6 +197,7 @@ public:
 				#define RESULT_WIFI_OFF 0x8ae6e
 				#define RESULT_WIFI_NOT_FOUND 0x8986e
 				#define RESULT_WIFI_NOT_FOUND_DISCONNECTED 0xfa66e
+				#define RESULT_WIFI_FOUND_NO_INTERNET 0x18706e
 				if (connectionRc == RESULT_WIFI_OFF) {
 					sprintf(toPrint, "Error! Wi-Fi turned off!\nOverlay disabled!");
 					wifiEnabled = false;
@@ -206,6 +207,9 @@ public:
 				}
 				else if (connectionRc == RESULT_WIFI_NOT_FOUND_DISCONNECTED) {
 					snprintf(toPrint, sizeof(toPrint), "Couldn't connect to:\n%s\n\nLast connection was not maintained!", wifi_devices[last_index].name.c_str());
+				}
+				else if (connectionRc == RESULT_WIFI_FOUND_NO_INTERNET) {
+					snprintf(toPrint, sizeof(toPrint), "Couldn't connect to:\n%s\n\nNo internet access!", wifi_devices[last_index].name.c_str());
 				}
 				else {
 					snprintf(toPrint, sizeof(toPrint), "Error while connecting to:\n%s\nError code: 0x%x", wifi_devices[last_index].name.c_str(), connectionRc);
