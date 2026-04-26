@@ -1,2 +1,3 @@
-# Wifi-Switcher
-Nintendo Switch overlay for switching between saved WiFi networks
+# WiFi Switcher
+
+Nintendo Switch overlay for connecting to already saved hotspots
