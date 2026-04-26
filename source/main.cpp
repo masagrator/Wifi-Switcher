@@ -294,10 +294,10 @@ public:
 	// Called once every frame to update values
 	virtual void update() override {
 		nifmIsWirelessCommunicationEnabled(&wifiEnabled);
+		NifmInternetConnectionType type;
+		u32 dummy;
+		NifmInternetConnectionStatus status;
 		if (wifiEnabled == true) {
-			NifmInternetConnectionType type;
-			u32 dummy;
-			NifmInternetConnectionStatus status;
 			Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
 			if (R_SUCCEEDED(rc)) {
 				if (type == NifmInternetConnectionType_Ethernet) {
@@ -306,6 +306,20 @@ public:
 					sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
 					return;
 				}
+			}
+		}
+		else {
+			Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
+			if (R_SUCCEEDED(rc)) {
+				if (type == NifmInternetConnectionType_Ethernet) {
+					isEthernet = true;
+					sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
+					return;
+				}
+			}
+			else {
+				sprintf(toPrint, "Wi-Fi is disabled!");
+				isEthernet = false;
 			}
 		}
 	}
