@@ -121,7 +121,7 @@ public:
 				wifiEnabled = false;
 				return;
 			}
-			sprintf(toPrint, "Choose device.");
+			sprintf(toPrint, "Choose network.");
 		}
 	}
 
@@ -229,11 +229,11 @@ public:
 				if (wifiEnabled && last_index == -1) {
 					NifmNetworkProfileData profile;
 					Result rc = nifmGetCurrentNetworkProfile(&profile);
-					if (R_FAILED(rc)) sprintf(toPrint, "Not connected.\nChoose device.");
-					else sprintf(toPrint, "Connected to:\n%s\nChoose device.", profile.network_name[0] ? profile.network_name : std::string(profile.wireless_setting_data.ssid, profile.wireless_setting_data.ssid_len).c_str());
+					if (R_FAILED(rc)) sprintf(toPrint, "Not connected.\nChoose network.");
+					else sprintf(toPrint, "Connected to:\n%s\nChoose network.", profile.network_name[0] ? profile.network_name : std::string(profile.wireless_setting_data.ssid, profile.wireless_setting_data.ssid_len).c_str());
 				}
 			}
-			else if (connectionRc == 0) sprintf(toPrint, "Not connected.\nChoose device.");
+			else if (connectionRc == 0) sprintf(toPrint, "Not connected.\nChoose network.");
 		}
 	}
 
