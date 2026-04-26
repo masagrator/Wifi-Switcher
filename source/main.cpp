@@ -106,6 +106,7 @@ NifmRequest _request;
 s32 last_index = -1;
 Result connectionRc = 0;
 bool requestOpen = true;
+bool isEthernet = false;
 
 class GuiTest : public tsl::Gui {
 public:
@@ -221,7 +222,7 @@ public:
 				if (type == NifmInternetConnectionType_Ethernet) {
 					wifiEnabled = false;
 				}
-				if (last_index == -1) {
+				if (wifiEnabled && last_index == -1) {
 					NifmNetworkProfileData profile;
 					Result rc = nifmGetCurrentNetworkProfile(&profile);
 					if (R_FAILED(rc)) sprintf(toPrint, "Not connected.\nChoose device.");
@@ -276,7 +277,7 @@ public:
 
 		auto *clickableListItem = new tsl::elm::ListItem("Enable Wi-Fi");
 		clickableListItem->setClickListener([](u64 keys) { 
-			if (wifiEnabled == false && (keys & HidNpadButton_A)) {
+			if (isEthernet == false && wifiEnabled == false && (keys & HidNpadButton_A)) {
 				nifmSetWirelessCommunicationEnabled(true);
 				return true;
 			}
@@ -298,10 +299,13 @@ public:
 			u32 dummy;
 			NifmInternetConnectionStatus status;
 			Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
-			if (R_SUCCEEDED(rc) && type == NifmInternetConnectionType_Ethernet) {
-				wifiEnabled = false;
-				sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
-				return;
+			if (R_SUCCEEDED(rc)) {
+				if (type == NifmInternetConnectionType_Ethernet) {
+					wifiEnabled = false;
+					isEthernet = true;
+					sprintf(toPrint, "Ethernet connection detected!\nOverlay disabled!");
+					return;
+				}
 			}
 		}
 	}
@@ -362,6 +366,19 @@ public:
 			nifmInitialize(NifmServiceType_System);
 			nifmCreateRequest(&_request, true);
 			nifmIsWirelessCommunicationEnabled(&wifiEnabled);
+			if (wifiEnabled == true) {
+				NifmInternetConnectionType type;
+				u32 dummy;
+				NifmInternetConnectionStatus status;
+				Result rc = nifmGetInternetConnectionStatus(&type, &dummy, &status);
+				if (R_SUCCEEDED(rc)) {
+					if (type == NifmInternetConnectionType_Ethernet) {
+						wifiEnabled = false;
+						isEthernet = true;
+						return;
+					}
+				}
+			}
 		});
 	
 	}  // Called at the start to initialize all services necessary for this Overlay
