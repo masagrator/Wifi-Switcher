@@ -110,7 +110,7 @@ bool requestOpen = true;
 class GuiTest : public tsl::Gui {
 public:
 	GuiTest() {
-		setsysGetWirelessLanEnableFlag(&wifiEnabled);
+		nifmIsWirelessCommunicationEnabled(&wifiEnabled);
 		if (wifiEnabled == true) {
 			NifmInternetConnectionType type;
 			u32 dummy;
@@ -211,7 +211,7 @@ public:
 				}
 			}
 		}
-		setsysGetWirelessLanEnableFlag(&wifiEnabled);
+		nifmIsWirelessCommunicationEnabled(&wifiEnabled);
 		if (wifiEnabled == true) {
 			NifmInternetConnectionType type;
 			u32 dummy;
@@ -292,7 +292,7 @@ public:
 
 	// Called once every frame to update values
 	virtual void update() override {
-		setsysGetWirelessLanEnableFlag(&wifiEnabled);
+		nifmIsWirelessCommunicationEnabled(&wifiEnabled);
 		if (wifiEnabled == true) {
 			NifmInternetConnectionType type;
 			u32 dummy;
@@ -359,10 +359,9 @@ public:
 
 		tsl::hlp::doWithSmSession([]{
 			
-			setsysInitialize();
 			nifmInitialize(NifmServiceType_System);
 			nifmCreateRequest(&_request, true);
-			setsysGetWirelessLanEnableFlag(&wifiEnabled);
+			nifmIsWirelessCommunicationEnabled(&wifiEnabled);
 		});
 	
 	}  // Called at the start to initialize all services necessary for this Overlay
@@ -371,7 +370,6 @@ public:
 		nifmRequestCancel(&_request);
 		nifmRequestClose(&_request);
 		nifmExit();
-		setsysExit();
 		wifi_devices.clear();
 	}  // Callet at the end to clean up all services previously initialized
 
