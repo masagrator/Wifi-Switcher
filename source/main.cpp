@@ -191,7 +191,11 @@ public:
 					requestOpen = true;
 				}
 			}
-			else if (R_SUCCEEDED(connectionRc)) snprintf(toPrint, sizeof(toPrint), "Successfully connected to:\n%s", wifi_devices[last_index].name.c_str());
+			else if (R_SUCCEEDED(connectionRc)) {
+				u32 ip_address = 0;
+				nifmGetCurrentIpConfigInfo(&ip_address, nullptr, nullptr, nullptr, nullptr);
+				snprintf(toPrint, sizeof(toPrint), "Successfully connected to:\n%s\n\nLocal IP: %d.%d.%d.%d", wifi_devices[last_index].name.c_str(), ip_address & 0xFF, (ip_address >> 8) & 0xFF, (ip_address >> 16) & 0xFF, (ip_address >> 24) & 0xFF);
+			}
 			else {
 				requestOpen = true;
 				#define RESULT_WIFI_OFF 0x8ae6e
@@ -230,7 +234,11 @@ public:
 					NifmNetworkProfileData profile;
 					Result rc = nifmGetCurrentNetworkProfile(&profile);
 					if (R_FAILED(rc)) sprintf(toPrint, "Not connected.\nChoose network.");
-					else sprintf(toPrint, "Connected to:\n%s\nChoose network.", profile.network_name[0] ? profile.network_name : std::string(profile.wireless_setting_data.ssid, profile.wireless_setting_data.ssid_len).c_str());
+					else {
+						u32 ip_address = 0;
+						nifmGetCurrentIpConfigInfo(&ip_address, nullptr, nullptr, nullptr, nullptr);
+						sprintf(toPrint, "Connected to:\n%s\nLocal IP: %d.%d.%d.%d\nChoose network.", profile.network_name[0] ? profile.network_name : std::string(profile.wireless_setting_data.ssid, profile.wireless_setting_data.ssid_len).c_str(), ip_address & 0xFF, (ip_address >> 8) & 0xFF, (ip_address >> 16) & 0xFF, (ip_address >> 24) & 0xFF);
+					}
 				}
 			}
 			else if (connectionRc == 0) sprintf(toPrint, "Not connected.\nChoose network.");
