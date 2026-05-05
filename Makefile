@@ -38,7 +38,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	WiFi Switcher
-APP_VERSION	:=	1.0.2
+APP_VERSION	:=	1.0.3
 
 TARGET		:=	WiFi_Switcher
 BUILD		:=	build
