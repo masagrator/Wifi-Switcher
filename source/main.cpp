@@ -143,7 +143,7 @@ public:
 		if (wifiEnabled) {
 			for (size_t i = 0; i < wifi_devices.size(); i++) {
 				auto *clickableListItem = new tsl::elm::ListItem(wifi_devices[i].name);
-				clickableListItem->setClickListener([i, this](u64 keys) { 
+				clickableListItem->setClickListener([this, list, i](u64 keys) {
 					if (wifiEnabled && requestOpen && (keys & HidNpadButton_A)) {
 						if (connectionRc == UINT32_MAX) {
 							nifmRequestCancel(&_request);
@@ -157,7 +157,7 @@ public:
 						last_index = i;
 						requestOpen = false;
 						for (size_t x = 0; x < i; x++) {
-							this->requestFocus(this->getFocusedElement()->getParent(), tsl::FocusDirection::Up, false);
+							this->requestFocus(list, tsl::FocusDirection::Up, false);
 						}
 						return true;
 					}
